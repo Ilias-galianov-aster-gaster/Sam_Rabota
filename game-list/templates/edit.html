@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Редактирование записи</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>✏️ Редактирование записи</h1>
+
+    <form method="POST">
+        <fieldset>
+            <legend>Изменить данные</legend>
+            <label>Имя пользователя: <input type="text" name="username" value="{{ game.username }}" required></label><br>
+            <label>Название игры: <input type="text" name="game_name" value="{{ game.game_name or '' }}"></label><br>
+            <label>Ссылка на игру: <input type="url" name="game_link" value="{{ game.game_link or '' }}"></label><br>
+            <label>Достижения: <input type="number" name="achievements" value="{{ game.achievements }}" min="0"></label>
+            <label>из <input type="number" name="total_achievements" value="{{ game.total_achievements }}" min="0"></label><br>
+            <label>Часы: <input type="number" step="0.1" name="hours" value="{{ game.hours }}"></label><br>
+            <label>Цель: <input type="text" name="goal" value="{{ game.goal or '' }}"></label><br>
+            <label>Статус: <input type="text" name="status" value="{{ game.status or '' }}"></label><br>
+            <label>Перерождения: <input type="number" name="rebirths" value="{{ game.rebirths }}"></label><br>
+            <input type="submit" value="Сохранить изменения">
+            <a href="{{ url_for('index') }}">Отмена</a>
+        </fieldset>
+    </form>
+</body>
+</html>

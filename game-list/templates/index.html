@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Список играемых игр</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>🎮 Список играемых игр</h1>
+
+    <div class="sort-links">
+        <a href="{{ url_for('index', sort='name') }}">🔤 Сортировка по имени</a> |
+        <a href="{{ url_for('index', sort='time') }}">🕒 Сортировка по времени добавления</a>
+    </div>
+
+    <form method="POST">
+        <fieldset>
+            <legend>➕ Добавить игру</legend>
+            <label>Имя пользователя: <input type="text" name="username" required></label><br>
+            <label>Название игры: <input type="text" name="game_name" placeholder="Например, Cyberpunk 2077"></label><br>
+            <label>Ссылка на игру: <input type="url" name="game_link" placeholder="https://..."></label><br>
+            <label>Достижения: <input type="number" name="achievements" value="0" min="0"></label>
+            <label>из <input type="number" name="total_achievements" value="0" min="0"></label><br>
+            <label>Часы: <input type="number" step="0.1" name="hours" value="0"></label><br>
+            <label>Цель: <input type="text" name="goal" placeholder="Например, пройти сюжет"></label><br>
+            <label>Статус: <input type="text" name="status" placeholder="В процессе, Завершена..."></label><br>
+            <label>Перерождения/Колличество прохождений: <input type="number" name="rebirths" value="0"></label><br>
+            <input type="submit" value="Добавить">
+        </fieldset>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Имя пользователя</th>
+                <th>Игра</th>
+                <th>Ссылка</th>
+                <th>Достижения</th>
+                <th>Часы</th>
+                <th>Цель</th>
+                <th>Статус</th>
+                <th>Перерождения/Колличество прохождений</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for game in games %}
+            <tr>
+                <td>{{ game.username }}</td>
+                <td>{{ game.game_name or '—' }}</td>
+                <td>
+                    {% if game.game_link %}
+                        <a href="{{ game.game_link }}" target="_blank">🔗</a>
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td>{{ game.achievements }} / {{ game.total_achievements }}</td>
+                <td>{{ game.hours }}</td>
+                <td>{{ game.goal or '—' }}</td>
+                <td>{{ game.status or '—' }}</td>
+                <td>{{ game.rebirths }}</td>
+                <td>
+                    <a href="{{ url_for('edit', id=game.id) }}">✏️</a>
+                    <a href="{{ url_for('delete', id=game.id) }}" onclick="return confirm('Удалить запись?')">🗑️</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
