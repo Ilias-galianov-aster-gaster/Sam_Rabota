@@ -2,18 +2,47 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Список играемых игр</title>
+    <title>Список игр</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>🎮 Список играемых игр</h1>
-
-    <div class="sort-links">
-        <a href="{{ url_for('index', sort='name') }}">🔤 Сортировка по имени</a> |
-        <a href="{{ url_for('index', sort='time') }}">🕒 Сортировка по времени добавления</a>
+    <div class="header">
+        <h1>🎮 Список игр</h1>
+        <div class="user-info">
+            <span>👤 {{ session.username }}</span>
+            <a href="{{ url_for('logout') }}" class="logout-btn">Выйти</a>
+        </div>
     </div>
 
-    <form method="POST">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <!-- Поиск -->
+    <div class="search-bar">
+        <form method="GET" action="{{ url_for('index') }}">
+            <input type="text" name="search" placeholder="Поиск по названию игры..." value="{{ search_query }}">
+            <input type="submit" value="🔍 Найти">
+            {% if search_query %}
+                <a href="{{ url_for('index') }}" class="clear-search">✖ Сбросить</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Сортировка -->
+    <div class="sort-links">
+        <span>Сортировка: </span>
+        <a href="{{ url_for('index', sort='name', search=search_query) }}" {% if sort_by == 'name' %}class="active"{% endif %}>По имени</a> |
+        <a href="{{ url_for('index', sort='time', search=search_query) }}" {% if sort_by == 'time' %}class="active"{% endif %}>По дате</a> |
+        <a href="{{ url_for('index', sort='hours_asc', search=search_query) }}" {% if sort_by == 'hours_asc' %}class="active"{% endif %}>Часы (↑)</a> |
+        <a href="{{ url_for('index', sort='hours_desc', search=search_query) }}" {% if sort_by == 'hours_desc' %}class="active"{% endif %}>Часы (↓)</a> |
+        <a href="{{ url_for('index', sort='playthroughs_asc', search=search_query) }}" {% if sort_by == 'playthroughs_asc' %}class="active"{% endif %}>Прохождений (↑)</a>
+    </div>
+
+    <!-- Форма добавления -->
+    <form method="POST" action="{{ url_for('add_game') }}">
         <fieldset>
             <legend>➕ Добавить игру</legend>
             <label>Имя пользователя: <input type="text" name="username" required></label><br>
@@ -23,12 +52,27 @@
             <label>из <input type="number" name="total_achievements" value="0" min="0"></label><br>
             <label>Часы: <input type="number" step="0.1" name="hours" value="0"></label><br>
             <label>Цель: <input type="text" name="goal" placeholder="Например, пройти сюжет"></label><br>
-            <label>Статус: <input type="text" name="status" placeholder="В процессе, Завершена..."></label><br>
-            <label>Перерождения/Колличество прохождений: <input type="number" name="rebirths" value="0"></label><br>
+            <label>Статус:
+                <select name="status">
+                    <option value="В процессе" selected>В процессе</option>
+                    <option value="Заморожено">Заморожено</option>
+                    <option value="Выполнено">Выполнено</option>
+                </select>
+            </label><br>
+            <label>Перерождения: <input type="number" name="rebirths" value="0"></label><br>
+            <label>Количество прохождений: <input type="number" name="playthroughs" value="0"></label><br>
             <input type="submit" value="Добавить">
         </fieldset>
     </form>
 
+    <!-- Кнопка очистки всех игр -->
+    <div class="clear-all-container" style="display: flex; justify-content: flex-end; margin: 10px 0;">
+        <form method="POST" action="{{ url_for('clear_all') }}" onsubmit="return confirm('Вы уверены, что хотите удалить ВСЕ свои игры? Это действие необратимо!');">
+            <input type="submit" value="🗑️ Очистить все" class="clear-all-btn" {% if not games %}disabled{% endif %}>
+        </form>
+    </div>
+
+    <!-- Таблица -->
     <table>
         <thead>
             <tr>
@@ -39,7 +83,8 @@
                 <th>Часы</th>
                 <th>Цель</th>
                 <th>Статус</th>
-                <th>Перерождения/Колличество прохождений</th>
+                <th>Перерождения</th>
+                <th>Прохождений</th>
                 <th>Действия</th>
             </tr>
         </thead>
@@ -48,22 +93,21 @@
             <tr>
                 <td>{{ game.username }}</td>
                 <td>{{ game.game_name or '—' }}</td>
-                <td>
-                    {% if game.game_link %}
-                        <a href="{{ game.game_link }}" target="_blank">🔗</a>
-                    {% else %}
-                        —
-                    {% endif %}
-                </td>
+                <td>{% if game.game_link %}<a href="{{ game.game_link }}" target="_blank">🔗</a>{% else %}—{% endif %}</td>
                 <td>{{ game.achievements }} / {{ game.total_achievements }}</td>
                 <td>{{ game.hours }}</td>
                 <td>{{ game.goal or '—' }}</td>
                 <td>{{ game.status or '—' }}</td>
                 <td>{{ game.rebirths }}</td>
+                <td>{{ game.playthroughs }}</td>
                 <td>
                     <a href="{{ url_for('edit', id=game.id) }}">✏️</a>
                     <a href="{{ url_for('delete', id=game.id) }}" onclick="return confirm('Удалить запись?')">🗑️</a>
                 </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="10" style="text-align:center; color:#999;">Нет записей, соответствующих условиям</td>
             </tr>
             {% endfor %}
         </tbody>
