@@ -99,6 +99,7 @@ def index():
         base_query += ' AND game_name LIKE ?'
         params.append(f'%{search_query}%')
 
+
     # Определяем сортировку
     order_clause = ''
     if sort_by == 'name':
